@@ -10,6 +10,7 @@ NoteCrypt (Safe-Share) is a simple, secure, and visually appealing web applicati
 ## ✨ Features
 
 - **Password Protection**: Every shared note is secured with a unique password.
+- **End-to-End Style Security**: Note content is encrypted using AES-256-GCM entirely on the server-side before it is saved to MongoDB. Plaintext notes are never stored directly in the database.
 - **User Authentication**: Secure login and signup system using JWT (JSON Web Tokens).
 - **Responsive Design**: Accessible and beautiful on both desktop and mobile devices.
 - **Fast & Modern**: Built with React (Vite) for a lightning-fast frontend experience.
@@ -59,7 +60,10 @@ Ensure you have the following installed on your machine:
    PORT=5000
    MONGO_URI=your_mongodb_connection_string
    JWT_SECRET=your_super_secret_jwt_key
+   NOTE_ENCRYPTION_KEY=your_32_byte_hex_string_key
    ```
+   *Note: `NOTE_ENCRYPTION_KEY` is a 32-byte hex string required for AES-256-GCM encryption.*
+
    Start the backend server:
    ```bash
    npm run dev
