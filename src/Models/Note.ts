@@ -9,6 +9,7 @@ export interface INote extends Document {
   iv?: string; // Initialization vector (hex)
   authTag?: string; // Authentication tag (hex)
   password: string; // bcrypt hashed password
+  expiresAt?: Date; // Auto-expiration time
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,7 @@ const noteSchema = new Schema<INote>(
     iv: { type: String, required: false },
     authTag: { type: String, required: false },
     password: { type: String, required: true },
+    expiresAt: { type: Date, required: false, index: { expireAfterSeconds: 0 } },
   },
   { timestamps: true }
 );

@@ -11,6 +11,7 @@ NoteCrypt (Safe-Share) is a simple, secure, and visually appealing web applicati
 
 - **Password Protection**: Every shared note is secured with a unique password.
 - **End-to-End Style Security**: Note content is encrypted using AES-256-GCM entirely on the server-side before it is saved to MongoDB. Plaintext notes are never stored directly in the database.
+- **Auto-Expiring Links**: Notes can be configured to automatically expire after a set duration. MongoDB TTL indexes permanently remove expired notes, and strict API-level checks prevent access during the brief async cleanup window.
 - **User Authentication**: Secure login and signup system using JWT (JSON Web Tokens).
 - **Responsive Design**: Accessible and beautiful on both desktop and mobile devices.
 - **Fast & Modern**: Built with React (Vite) for a lightning-fast frontend experience.

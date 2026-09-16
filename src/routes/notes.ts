@@ -8,13 +8,40 @@ import { encryptNote, decryptNote } from "../utils/crypto";
 const router = Router();
 
 /**
+ * Parses duration string (e.g. "10m", "1h", "1d") and returns the absolute Date
+ * Returns undefined for "never" or invalid formats
+ */
+function getExpiresAtDate(expiresIn?: string): Date | undefined {
+  if (!expiresIn || expiresIn === "never") return undefined;
+  
+  const match = expiresIn.match(/^(\d+)([mhd])$/);
+  if (!match) return undefined;
+  
+  const amount = parseInt(match[1], 10);
+  const unit = match[2];
+  
+  if (isNaN(amount) || amount <= 0) return undefined;
+  
+  const now = new Date();
+  
+  switch (unit) {
+    case 'm': now.setMinutes(now.getMinutes() + amount); break;
+    case 'h': now.setHours(now.getHours() + amount); break;
+    case 'd': now.setDate(now.getDate() + amount); break;
+    default: return undefined;
+  }
+  
+  return now;
+}
+
+/**
  * POST /api/notes/create
- * Body: { title, content, password }
+ * Body: { title, content, password, expiresIn }
  * Header: Authorization: Bearer <token>
  */
 router.post("/create", auth, async (req: any, res: Response) => {
   try {
-    const { title, content, password } = req.body;
+    const { title, content, password, expiresIn } = req.body;
 
     if (!title || !content || !password) {
       return res.status(400).json({ msg: "Title, content and password are required" });
@@ -27,7 +54,10 @@ router.post("/create", auth, async (req: any, res: Response) => {
     // 2. Encrypt the note content
     const encryptedData = encryptNote(content);
 
-    // 3. Save to database without plaintext content
+    // 3. Compute expiration date
+    const expiresAt = getExpiresAtDate(expiresIn);
+
+    // 4. Save to database without plaintext content
     const note = await Note.create({
       user: req.user?.id || null,
       title,
@@ -35,6 +65,7 @@ router.post("/create", auth, async (req: any, res: Response) => {
       iv: encryptedData.iv,
       authTag: encryptedData.authTag,
       password: hashedPassword,
+      ...(expiresAt && { expiresAt }),
     });
 
     // Frontend expects data._id, so return the full note
@@ -60,11 +91,16 @@ router.post("/:id/verify", async (req: Request, res: Response) => {
     }
 
     const note = await Note.findById(req.params.id).select(
-      "title content encryptedContent iv authTag password"
+      "title content encryptedContent iv authTag password expiresAt"
     );
     
     if (!note) {
       return res.status(404).json({ msg: "Note not found" });
+    }
+
+    // Strict expiration check: MongoDB TTL deletion is async, so we must enforce it here
+    if (note.expiresAt && new Date() > note.expiresAt) {
+      return res.status(410).json({ msg: "This note has expired or is no longer available." });
     }
 
     // Handle backward compatibility: legacy notes store password in plaintext
