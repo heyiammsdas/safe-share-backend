@@ -4,7 +4,7 @@ const ALGORITHM = 'aes-256-gcm';
 
 // 32-byte key is expected (64 hex characters)
 function getEncryptionKey(): Buffer {
-  const keyHex = process.env.NOTE_ENCRYPTION_KEY;
+  const keyHex = process.env.NOTE_ENCRYPTION_KEY?.trim();
   if (!keyHex) {
     throw new Error('NOTE_ENCRYPTION_KEY environment variable is not set');
   }

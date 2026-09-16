@@ -58,21 +58,26 @@ router.post("/create", auth, async (req: any, res: Response) => {
     const expiresAt = getExpiresAtDate(expiresIn);
 
     // 4. Save to database without plaintext content
-    const note = await Note.create({
-      user: req.user?.id || null,
+    const noteData: any = {
       title,
       encryptedContent: encryptedData.encryptedContent,
       iv: encryptedData.iv,
       authTag: encryptedData.authTag,
       password: hashedPassword,
-      ...(expiresAt && { expiresAt }),
-    });
+    };
+    if (req.user?.id) noteData.user = req.user.id;
+    if (expiresAt) noteData.expiresAt = expiresAt;
+
+    const note = await Note.create(noteData);
 
     // Frontend expects data._id, so return the full note
     return res.status(201).json(note);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Error in POST /api/notes/create:", err);
-    return res.status(500).json({ msg: "Server error while creating note" });
+    if (err.message?.includes('NOTE_ENCRYPTION_KEY')) {
+      return res.status(500).json({ msg: "Server configuration error: Encryption key is missing. Please restart the backend server." });
+    }
+    return res.status(500).json({ msg: "Server error while creating note: " + (err.message || "Unknown error") });
   }
 });
 
