@@ -142,9 +142,40 @@ router.post("/:id/verify", async (req: Request, res: Response) => {
       title: note.title, 
       content: finalContent 
     });
-  } catch (err) {
+  } catch (err: any) {
+    if (err.name === 'CastError') {
+      return res.status(404).json({ msg: "Note not found" });
+    }
     console.error("Error in POST /api/notes/:id/verify:", err);
     return res.status(500).json({ msg: "Server error while verifying note" });
+  }
+});
+
+/**
+ * GET /api/notes/:id/status
+ * No auth required - public for sharing
+ * Returns 200 if note exists and is valid, 404 if not found, 410 if expired
+ */
+router.get("/:id/status", async (req: Request, res: Response) => {
+  try {
+    const note = await Note.findById(req.params.id).select("expiresAt");
+    
+    if (!note) {
+      return res.status(404).json({ msg: "Note not found" });
+    }
+
+    if (note.expiresAt && new Date() > note.expiresAt) {
+      return res.status(410).json({ msg: "This note has expired or is no longer available." });
+    }
+
+    return res.status(200).json({ status: "valid" });
+  } catch (err: any) {
+    // If CastError, it means the ID is invalid, treat as 404
+    if (err.name === 'CastError') {
+      return res.status(404).json({ msg: "Note not found" });
+    }
+    console.error("Error in GET /api/notes/:id/status:", err);
+    return res.status(500).json({ msg: "Server error" });
   }
 });
 
