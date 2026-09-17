@@ -1,111 +1,94 @@
-# 🔒 NoteCrypt (Safe-Share)
+# ⚙️ Safe Share - Backend API
 
-![React](https://img.shields.io/badge/frontend-React-61DAFB?logo=react&logoColor=black)
-![Node](https://img.shields.io/badge/backend-Node.js-339933?logo=nodedotjs&logoColor=white)
-![MongoDB](https://img.shields.io/badge/database-MongoDB-47A248?logo=mongodb&logoColor=white)
-![TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6?logo=typescript&logoColor=white)
+> **The secure, encrypted Node.js/Express engine powering the Safe Share platform.**
 
-NoteCrypt (Safe-Share) is a simple, secure, and visually appealing web application that allows users to create, share, and protect encrypted notes using passwords. Share sensitive information with confidence knowing it is protected.
+![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Framework-Express-000000?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb&logoColor=white)
+![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?logo=typescript&logoColor=white)
+![Security](https://img.shields.io/badge/Encryption-AES--256--GCM-red)
 
-## ✨ Features
+This repository contains the backend REST API for **Safe Share**. It handles user authentication, data encryption, secure sharing link generation, and automated data expiration via MongoDB TTL indexes.
 
-- **Password Protection**: Every shared note is secured with a unique password.
-- **End-to-End Style Security**: Note content is encrypted using AES-256-GCM entirely on the server-side before it is saved to MongoDB. Plaintext notes are never stored directly in the database.
-- **Auto-Expiring Links**: Notes can be configured to automatically expire after a set duration. MongoDB TTL indexes permanently remove expired notes, and strict API-level checks prevent access during the brief async cleanup window.
-- **User Authentication**: Secure login and signup system using JWT (JSON Web Tokens).
-- **Responsive Design**: Accessible and beautiful on both desktop and mobile devices.
-- **Fast & Modern**: Built with React (Vite) for a lightning-fast frontend experience.
+---
+
+## 🛡️ Core Security Architecture
+
+- **Server-Side Encryption**: Note content is encrypted using **AES-256-GCM** (Authenticated Encryption with Associated Data) before being stored in the database. Plaintext notes are never stored.
+- **Stateless Authentication**: Protected API endpoints use **JSON Web Tokens (JWT)** for secure user sessions.
+- **Cryptographic Hashing**: User passwords and note passkeys are securely hashed with **bcrypt** (cost factor 10).
+- **Hardened Expiration**: Guest notes expire strictly after 2 minutes. Expired notes are aggressively rejected by the API layer, supplementing MongoDB's background TTL cleanup process to ensure zero leakage.
+
+---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **React.js** (Bootstrapped with Vite)
-- **TypeScript**
-- **React Router** for navigation
-- **Axios** for API requests
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: `jsonwebtoken`
+- **Cryptography**: Native Node `crypto` (AES-256-GCM), `bcrypt`
 
-### Backend
-- **Node.js** & **Express.js**
-- **TypeScript**
-- **MongoDB** with **Mongoose** (Database)
-- **bcrypt** for password hashing
-- **jsonwebtoken (JWT)** for secure authentication
+---
 
-## 🚀 Getting Started
-
-Follow these instructions to get a copy of the project up and running on your local machine.
-
-### Prerequisites
-
-Ensure you have the following installed on your machine:
-- [Node.js](https://nodejs.org/) (v16 or higher)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
-- A [MongoDB](https://www.mongodb.com/) database (Local or MongoDB Atlas)
-
-### Installation & Setup
-
-1. **Clone the repository** (if you haven't already):
-   ```bash
-   git clone <your-repository-url>
-   cd safe-share
-   ```
-
-2. **Setup Backend:**
-   Open a new terminal and navigate to the backend directory:
-   ```bash
-   cd backend
-   npm install
-   ```
-   Create a `.env` file in the `backend` directory with the following variables:
-   ```env
-   PORT=5000
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_super_secret_jwt_key
-   NOTE_ENCRYPTION_KEY=your_32_byte_hex_string_key
-   ```
-   *Note: `NOTE_ENCRYPTION_KEY` is a 32-byte hex string required for AES-256-GCM encryption.*
-
-   Start the backend server:
-   ```bash
-   npm run dev
-   ```
-
-3. **Setup Frontend:**
-   Open another terminal and navigate to the frontend directory:
-   ```bash
-   cd frontend
-   npm install
-   ```
-   Create a `.env` file in the `frontend` directory:
-   ```env
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-   Start the frontend development server:
-   ```bash
-   npm run dev
-   ```
-
-4. **Open the app!**
-   Navigate to the URL provided by Vite (usually `http://localhost:5173`) in your browser.
-
-## 📁 Project Structure
+## 📁 Directory Structure
 
 ```text
-safe-share/
-├── backend/            # Express server, MongoDB models, APIs
-│   ├── src/            # Backend source code
-│   ├── .env            # Backend environment variables
-│   └── package.json    # Backend dependencies
-└── frontend/           # React frontend application
-    ├── src/            # Frontend source code, components, pages
-    ├── .env            # Frontend environment variables
-    └── package.json    # Frontend dependencies
+backend/
+├── src/
+│   ├── controllers/      # Route logic handlers
+│   ├── middlewares/      # Express middlewares (e.g., JWT Auth)
+│   ├── Models/           # Mongoose schemas (User, Note)
+│   ├── routes/           # API route definitions
+│   ├── types/            # TypeScript interface definitions
+│   ├── utils/            # Crypto and helper utilities
+│   └── index.ts          # Server entry point
+├── .env                  # Environment variables (Ignored in Git)
+├── package.json          # Dependencies and scripts
+└── tsconfig.json         # TypeScript compiler configuration
 ```
 
-## 🤝 Contributing
+---
 
-Contributions, issues, and feature requests are welcome!
+## 🚀 Installation and Setup
 
-## 📄 License
+### Prerequisites
+- Node.js (v16+)
+- A running MongoDB instance (Local or MongoDB Atlas)
 
-This project is open-source and available under the MIT License.
+### 1. Install Dependencies
+Navigate to the `backend` directory and install the necessary packages:
+```bash
+npm install
+```
+
+### 2. Environment Variables
+Create a `.env` file in the root of the `backend` folder to configure your secrets and database connection:
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/safe-share
+JWT_SECRET=your_super_secret_jwt_key
+NOTE_ENCRYPTION_KEY=your_32_byte_hex_string_encryption_key
+```
+*(**Note:** The `NOTE_ENCRYPTION_KEY` must be a valid 32-byte hex string for AES-256 encryption to function properly).*
+
+### 3. Start Development Server
+Start the server using `nodemon` or your configured dev script:
+```bash
+npm run dev
+```
+
+The API will now be running and listening for requests at `http://localhost:5000`.
+
+---
+
+## 📡 Key API Endpoints
+
+- `POST /api/auth/register` - Create a new user account.
+- `POST /api/auth/login` - Authenticate a user and receive a JWT.
+- `GET /api/notes/active` - Fetch all non-expired links belonging to the authenticated user.
+- `POST /api/notes/create` - Create a new encrypted note with configurable expiration.
+- `POST /api/notes/guest` - Create a guest note (auto-expires in 2 minutes).
+- `GET /api/notes/:id/status` - Pre-flight check to see if a link is valid or expired.
+- `POST /api/notes/:id/verify` - Submit a passkey to decrypt and view a note.
