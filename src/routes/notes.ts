@@ -130,6 +130,31 @@ router.post("/guest", async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/notes/active
+ * Header: Authorization: Bearer <token>
+ * Returns all active (non-expired) notes for the authenticated user.
+ */
+router.get("/active", auth, async (req: any, res: Response) => {
+  try {
+    const activeNotes = await Note.find({
+      user: req.user.id,
+      $or: [
+        { expiresAt: { $exists: false } },
+        { expiresAt: null },
+        { expiresAt: { $gt: new Date() } }
+      ]
+    })
+    .select("_id title expiresAt createdAt")
+    .sort({ expiresAt: 1, createdAt: -1 });
+
+    return res.json(activeNotes);
+  } catch (err) {
+    console.error("Error in GET /api/notes/active:", err);
+    return res.status(500).json({ msg: "Server error while fetching active notes" });
+  }
+});
+
+/**
  * POST /api/notes/:id/verify
  * Body: { password }
  * No auth required - public for sharing
