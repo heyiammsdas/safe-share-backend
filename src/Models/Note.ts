@@ -10,6 +10,7 @@ export interface INote extends Document {
   authTag?: string; // Authentication tag (hex)
   password: string; // bcrypt hashed password
   expiresAt?: Date; // Auto-expiration time
+  isGuest: boolean; // Indicates if note was created by a guest
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +25,7 @@ const noteSchema = new Schema<INote>(
     authTag: { type: String, required: false },
     password: { type: String, required: true },
     expiresAt: { type: Date, required: false, index: { expireAfterSeconds: 0 } },
+    isGuest: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

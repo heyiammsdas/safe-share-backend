@@ -82,6 +82,54 @@ router.post("/create", auth, async (req: any, res: Response) => {
 });
 
 /**
+ * POST /api/notes/guest
+ * Body: { title, content, password }
+ * No auth required. Creates a note that expires in exactly 2 minutes.
+ */
+router.post("/guest", async (req: Request, res: Response) => {
+  try {
+    const { title, content, password } = req.body;
+
+    if (!title || !content || !password) {
+      return res.status(400).json({ msg: "Title, content and password are required" });
+    }
+
+    // Hash the password for verification later
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Encrypt the note content
+    const encryptedData = encryptNote(content);
+
+    // Calculate expiration date (exactly 2 minutes from now)
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 2);
+
+    // Save to database
+    const noteData: any = {
+      title,
+      encryptedContent: encryptedData.encryptedContent,
+      iv: encryptedData.iv,
+      authTag: encryptedData.authTag,
+      password: hashedPassword,
+      expiresAt,
+      isGuest: true, // Mark as guest note
+      // No user reference is attached
+    };
+
+    const note = await Note.create(noteData);
+
+    return res.status(201).json(note);
+  } catch (err: any) {
+    console.error("Error in POST /api/notes/guest:", err);
+    if (err.message?.includes('NOTE_ENCRYPTION_KEY')) {
+      return res.status(500).json({ msg: "Server configuration error: Encryption key is missing." });
+    }
+    return res.status(500).json({ msg: "Server error while creating guest note: " + (err.message || "Unknown error") });
+  }
+});
+
+/**
  * POST /api/notes/:id/verify
  * Body: { password }
  * No auth required - public for sharing
